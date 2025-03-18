@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - '3306:3306'
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  web:
+    build: .
+    environment:
+      - RAILS_ENV=development
+      - BUNDLE_PATH=/usr/local/bundle
+    volumes:
+      - .:/rails:cached
+      - tmp:/rails/tmp
+      - log:/rails/log
+      - bundle:/usr/local/bundle
+    ports:
+      - "53000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+volumes:
+  mysql-data:
+    driver: local
+  tmp:
+  log:
+  bundle:
